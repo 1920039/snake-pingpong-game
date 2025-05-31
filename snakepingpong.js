@@ -23,6 +23,22 @@ const ball = {
 let snake = [{x: 250, y: 370}];
 let snakeLength = 1;
 
+// Bricks
+const brickRowCount = 4;
+const brickColCount = 8;
+const brickWidth = 55;
+const brickHeight = 20;
+const brickPadding = 10;
+const brickOffsetTop = 40;
+const brickOffsetLeft = 20;
+let bricks = [];
+for (let c = 0; c < brickColCount; c++) {
+    bricks[c] = [];
+    for (let r = 0; r < brickRowCount; r++) {
+        bricks[c][r] = { x: 0, y: 0, status: 1 };
+    }
+}
+
 let score = 0;
 let gameOver = false;
 
@@ -44,6 +60,24 @@ function drawSnake() {
     snake.forEach(part => {
         ctx.fillRect(part.x, part.y, paddle.width, paddle.height);
     });
+}
+
+function drawBricks() {
+    for (let c = 0; c < brickColCount; c++) {
+        for (let r = 0; r < brickRowCount; r++) {
+            if (bricks[c][r].status === 1) {
+                let brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+                let brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
+                bricks[c][r].x = brickX;
+                bricks[c][r].y = brickY;
+                ctx.beginPath();
+                ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                ctx.fillStyle = '#ffa500';
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+    }
 }
 
 function movePaddle() {
@@ -74,6 +108,25 @@ function moveBall() {
         score++;
         // Snake grows
         snakeLength++;
+    }
+
+    // Brick collision
+    for (let c = 0; c < brickColCount; c++) {
+        for (let r = 0; r < brickRowCount; r++) {
+            let b = bricks[c][r];
+            if (b.status === 1) {
+                if (
+                    ball.x > b.x &&
+                    ball.x < b.x + brickWidth &&
+                    ball.y - ball.radius < b.y + brickHeight &&
+                    ball.y + ball.radius > b.y
+                ) {
+                    ball.dy *= -1;
+                    b.status = 0;
+                    score += 5;
+                }
+            }
+        }
     }
 
     // Bottom collision (game over)
@@ -109,6 +162,7 @@ function loop() {
         movePaddle();
         moveBall();
         updateSnake();
+        drawBricks();
         drawPaddle();
         drawBall();
         drawSnake();
